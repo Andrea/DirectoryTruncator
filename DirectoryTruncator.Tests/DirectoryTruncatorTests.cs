@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 
@@ -114,8 +115,8 @@ namespace DirectoryTruncator.Tests
 		{
 			Assert.Throws<ArgumentException>(()=> _directoryTruncator.TruncateByFileCount(_testFolderPath, -1));
 		}
-		#region Private
 
+		#region Private
 		private void CreateTestFiles(int numberOfFiles)
 		{
 			for (int i = 0; i < numberOfFiles; i++)
