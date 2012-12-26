@@ -17,5 +17,5 @@ assets
 ActualBuild
 *.user
 cachefile*.*
-src/packages
+packages
 TestResult.xml
