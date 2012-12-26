@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectoryTruncator", "DirectoryTruncator\DirectoryTruncator.csproj", "{B40282D5-1CE0-4372-AAE9-8A4675610D4F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectoryTruncator.Tests", "DirectoryTruncator.Tests\DirectoryTruncator.Tests.csproj", "{D60554A2-3584-414C-A152-432588A8ADDF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B40282D5-1CE0-4372-AAE9-8A4675610D4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B40282D5-1CE0-4372-AAE9-8A4675610D4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B40282D5-1CE0-4372-AAE9-8A4675610D4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B40282D5-1CE0-4372-AAE9-8A4675610D4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D60554A2-3584-414C-A152-432588A8ADDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D60554A2-3584-414C-A152-432588A8ADDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D60554A2-3584-414C-A152-432588A8ADDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D60554A2-3584-414C-A152-432588A8ADDF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
