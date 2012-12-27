@@ -166,11 +166,6 @@ namespace DirectoryTruncator.Tests
 			{
 				string fileName = "TestFile" + (i + 1) + ".txt";
 				File.AppendAllText(Path.Combine(_testFolderPath, fileName), "File " + i + " contents");
-//				using (StreamWriter writer = new StreamWriter(Path.Combine(_testFolderPath, fileName)))
-//				{
-//					writer.WriteLine();
-//					writer.Flush();
-//				}
 			}
 			Assert.AreEqual(numberOfFiles, Directory.GetFiles(_testFolderPath).Length);
 		}
