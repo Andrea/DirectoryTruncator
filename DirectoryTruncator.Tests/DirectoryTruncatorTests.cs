@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 
@@ -29,7 +27,7 @@ namespace DirectoryTruncator.Tests
 		[SetUp]
 		public void SetUp()
 		{
-			_directoryTruncator = new DirectoryTruncator();
+			_directoryTruncator = new DirectoryTruncator(_testFolderPath);
 		}
 
 		[TearDown]
@@ -44,12 +42,18 @@ namespace DirectoryTruncator.Tests
 		}
 
 		[Test]
+		public void When_target_directory_doesnt_exist_Then_throw()
+		{
+			Assert.Throws<ArgumentException>(() => new DirectoryTruncator(_testFolderPath+"sads"));
+		}
+
+		[Test]
 		public void Can_truncate_a_directory_by_count_of_files_with_oldest_files_deleted_first()
 		{
 			const int expected = 2;
 			CreateTestFiles(expected + 1);
 
-			_directoryTruncator.TruncateByFileCount(_testFolderPath, expected);
+			_directoryTruncator.TruncateByFileCount( expected);
 
 			var files = Directory.GetFiles(_testFolderPath);
 			
@@ -68,7 +72,7 @@ namespace DirectoryTruncator.Tests
 			const int testFilesCount = 2;
 			CreateTestFiles(testFilesCount);
 
-			_directoryTruncator.TruncateByFileCount(_testFolderPath, maxFiles);
+			_directoryTruncator.TruncateByFileCount( maxFiles);
 
 			AssertDirectoryContainsNumberOfFiles(0);
 
@@ -81,7 +85,7 @@ namespace DirectoryTruncator.Tests
 			const int expected = 2;
 			CreateTestFiles(expected);
 
-			_directoryTruncator.TruncateByFileCount(_testFolderPath, MaxFiles);
+			_directoryTruncator.TruncateByFileCount( MaxFiles);
 
 			var files = Directory.GetFiles(_testFolderPath);
 
@@ -98,7 +102,7 @@ namespace DirectoryTruncator.Tests
 			const int MaxFiles = 3;
 			Assert.AreEqual(0, Directory.GetFiles(_testFolderPath).Length);
 
-			_directoryTruncator.TruncateByFileCount(_testFolderPath, MaxFiles);
+			_directoryTruncator.TruncateByFileCount( MaxFiles);
 
 			AssertDirectoryContainsNumberOfFiles(0);
 		}
@@ -106,8 +110,10 @@ namespace DirectoryTruncator.Tests
 		[Test]
 		public void When_maxFiles_negative_Then_throws()
 		{
-			Assert.Throws<ArgumentException>(()=> _directoryTruncator.TruncateByFileCount(_testFolderPath, -1));
+			Assert.Throws<ArgumentException>(()=> _directoryTruncator.TruncateByFileCount( -1));
 		}
+
+	
 
 		[Test]
 		public void When_4_subdirectories_and_max3_Then_deletes_one_directory()
@@ -115,7 +121,7 @@ namespace DirectoryTruncator.Tests
 			const int expected = 3;
 			CreateTestDirectories(expected+1, false);
 
-			_directoryTruncator.TruncateByDirectory(_testFolderPath, expected);
+			_directoryTruncator.TruncateByDirectory( expected);
 			
 			Assert.AreEqual(expected, Directory.GetDirectories(_testFolderPath).Length);
 		}
@@ -126,7 +132,7 @@ namespace DirectoryTruncator.Tests
 			const int expected = 3;
 			CreateTestDirectories(expected+1, true);
 			
-			_directoryTruncator.TruncateByDirectory(_testFolderPath, expected);
+			_directoryTruncator.TruncateByDirectory( expected);
 			
 			Assert.AreEqual(expected, Directory.GetDirectories(_testFolderPath).Length);
 		}
