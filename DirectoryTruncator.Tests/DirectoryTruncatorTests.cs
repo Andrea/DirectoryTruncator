@@ -37,6 +37,10 @@ namespace DirectoryTruncator.Tests
 		{
 			foreach (var file in Directory.GetFiles(_testFolderPath))
 				File.Delete(file);
+			foreach (var directory in Directory.GetDirectories(_testFolderPath))
+			{
+				Directory.Delete(directory, true);
+			}
 		}
 
 		[Test]
@@ -44,37 +48,30 @@ namespace DirectoryTruncator.Tests
 		{
 			const int expected = 2;
 			CreateTestFiles(expected + 1);
-			
 
 			_directoryTruncator.TruncateByFileCount(_testFolderPath, expected);
 
-			var files = new List<string>(Directory.GetFiles(_testFolderPath));
-			files.Sort();
-
-			string[] remainingFiles = files.ToArray();
-			Assert.AreEqual(expected, remainingFiles.Length);
-
-			Assert.AreEqual(remainingFiles, new[]
+			var files = Directory.GetFiles(_testFolderPath);
+			
+			AssertDirectoryContainsNumberOfFiles(expected);
+			Assert.AreEqual(new[]
 			                                     	{
 			                                     		Path.Combine(_testFolderPath, "TestFile2.txt"), 
 			                                     		Path.Combine(_testFolderPath, "TestFile3.txt")
-			                                     	});
+			                                     	}, files);
 		}
 
 		[Test]
 		public void When_maxFiles_zero_Then_empty_target_directory()
 		{
-			const int MaxFiles = 0;
+			const int maxFiles = 0;
+			const int testFilesCount = 2;
+			CreateTestFiles(testFilesCount);
 
-			const int TestFilesCount = 2;
-			CreateTestFiles(TestFilesCount);
+			_directoryTruncator.TruncateByFileCount(_testFolderPath, maxFiles);
 
-			Assert.AreEqual(TestFilesCount, Directory.GetFiles(_testFolderPath).Length);
+			AssertDirectoryContainsNumberOfFiles(0);
 
-			_directoryTruncator.TruncateByFileCount(_testFolderPath, MaxFiles);
-
-			string[] remainingFiles = Directory.GetFiles(_testFolderPath);
-			Assert.AreEqual(0, remainingFiles.Length);
 		}
 
 		[Test]
@@ -86,47 +83,88 @@ namespace DirectoryTruncator.Tests
 
 			_directoryTruncator.TruncateByFileCount(_testFolderPath, MaxFiles);
 
-			var files = new List<string>(Directory.GetFiles(_testFolderPath));
-			files.Sort();
+			var files = Directory.GetFiles(_testFolderPath);
 
-			string[] remainingFiles = files.ToArray();
-			Assert.AreEqual(expected, remainingFiles.Length);
-			Assert.AreEqual(remainingFiles, new[]
-			                                     	{
-			                                     		Path.Combine(_testFolderPath, "TestFile1.txt"), 
-			                                     		Path.Combine(_testFolderPath, "TestFile2.txt")
-			                                     	});
+			AssertDirectoryContainsNumberOfFiles(expected);
+			Assert.AreEqual(new[]{
+			                            Path.Combine(_testFolderPath, "TestFile1.txt"), 
+			                            Path.Combine(_testFolderPath, "TestFile2.txt")
+			                        }, files);
 		}
 
 		[Test]
-		public void Truncating_a_directory_has_no_effect_if_no_files_in_dir()
+		public void Truncating_has_no_effect_if_no_files_in_directory()
 		{
 			const int MaxFiles = 3;
 			Assert.AreEqual(0, Directory.GetFiles(_testFolderPath).Length);
 
 			_directoryTruncator.TruncateByFileCount(_testFolderPath, MaxFiles);
 
-			string[] remainingFiles = Directory.GetFiles(_testFolderPath);
-			Assert.AreEqual(0, remainingFiles.Length);
+			AssertDirectoryContainsNumberOfFiles(0);
 		}
-
+		
 		[Test]
 		public void When_maxFiles_negative_Then_throws()
 		{
 			Assert.Throws<ArgumentException>(()=> _directoryTruncator.TruncateByFileCount(_testFolderPath, -1));
 		}
 
+		[Test]
+		public void When_4_subdirectories_and_max3_Then_deletes_one_directory()
+		{
+			const int expected = 3;
+			CreateTestDirectories(expected+1, false);
+
+			_directoryTruncator.TruncateByDirectory(_testFolderPath, expected);
+			
+			Assert.AreEqual(expected, Directory.GetDirectories(_testFolderPath).Length);
+		}
+
+		[Test]
+		public void When_subdirectories_have_subdirectories_Then_delete_subdirectory_anyway()
+		{
+			const int expected = 3;
+			CreateTestDirectories(expected+1, true);
+			
+			_directoryTruncator.TruncateByDirectory(_testFolderPath, expected);
+			
+			Assert.AreEqual(expected, Directory.GetDirectories(_testFolderPath).Length);
+		}
+
 		#region Private
+
+		private void AssertDirectoryContainsNumberOfFiles(int expexted)
+		{
+			var remainingFiles = Directory.GetFiles(_testFolderPath);
+			Assert.AreEqual(expexted, remainingFiles.Length);
+		}
+
+		private void CreateTestDirectories(int numberOfDirectories, bool hasSubdirectories)
+		{
+			for (int i = 0; i < numberOfDirectories; i++)
+			{
+				string directoryName = Path.Combine(_testFolderPath, "TestDirectory" + (i + 1)) ;
+				var directoryInfo = Directory.CreateDirectory(directoryName);
+				if(hasSubdirectories)
+				{
+					directoryInfo.CreateSubdirectory("TestDirecotry");
+				}
+
+			}
+			Assert.AreEqual(numberOfDirectories, Directory.GetDirectories(_testFolderPath).Length);
+		}
+
 		private void CreateTestFiles(int numberOfFiles)
 		{
 			for (int i = 0; i < numberOfFiles; i++)
 			{
 				string fileName = "TestFile" + (i + 1) + ".txt";
-				using (StreamWriter writer = new StreamWriter(Path.Combine(_testFolderPath, fileName)))
-				{
-					writer.WriteLine("File " + i + " contents");
-					writer.Flush();
-				}
+				File.AppendAllText(Path.Combine(_testFolderPath, fileName), "File " + i + " contents");
+//				using (StreamWriter writer = new StreamWriter(Path.Combine(_testFolderPath, fileName)))
+//				{
+//					writer.WriteLine();
+//					writer.Flush();
+//				}
 			}
 			Assert.AreEqual(numberOfFiles, Directory.GetFiles(_testFolderPath).Length);
 		}
