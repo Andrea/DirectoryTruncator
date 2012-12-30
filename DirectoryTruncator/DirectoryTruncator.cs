@@ -1,18 +1,26 @@
 ﻿using System;
+//using System.IO;
 using System.IO;
 using System.Linq;
+using NLog;
 
 namespace DirectoryTruncator
 {
 	public class DirectoryTruncator
 	{
 		private readonly string _targetDirectory;
+		private static Logger _logger = LogManager.GetCurrentClassLogger();
+		private readonly IFileSystemWrapper _fileSystemWrapper;
 
-		public DirectoryTruncator(string targetDirectory)
+		public DirectoryTruncator(string targetDirectory, IFileSystemWrapper fileSystemWrapper)
 		{
-			if (!Directory.Exists(targetDirectory))
-				throw new ArgumentException("The target directory {0} does not exist", targetDirectory);
+			if (string.IsNullOrWhiteSpace(targetDirectory))
+				throw new ArgumentException();
 			_targetDirectory = targetDirectory;
+			
+			_fileSystemWrapper = fileSystemWrapper ?? new FileSystemWrapper();
+			if (!_fileSystemWrapper.DirectoryExists(targetDirectory))
+				throw new ArgumentException("The target directory {0} does not exist", targetDirectory);
 		}
 
 		/// <summary>
@@ -28,19 +36,22 @@ namespace DirectoryTruncator
 				throw new ArgumentException("maxFiles must be >= 0", "maxFiles");
 			if (recursive)
 				throw new NotImplementedException();
-			
-			var fileInfos = Directory.GetFiles(_targetDirectory)
+
+			var fileInfos = _fileSystemWrapper.DirectoryGetFiles(_targetDirectory)
 							.Select(file => new FileInfo(file));
 
 			var orderedFiles = fileInfos.OrderBy(fi => fi.CreationTimeUtc);
 
 			int excess = orderedFiles.Count() - maxFiles;
+			_logger.Trace("{0} files to be deleted", excess);
 			if (excess <= 0)
+			{
+				_logger.Info("There was no files to delete");
 				return;
+			}
 
-			orderedFiles.Take(excess).ToList().ForEach(y => File.Delete(y.FullName));
+			orderedFiles.Take(excess).ToList().ForEach(y => TryDeleteFile(y.FullName));
 		}
-
 
 		public void TruncateByDirectory(int expected)
 		{
@@ -49,10 +60,36 @@ namespace DirectoryTruncator
 			if (excess <= 0)
 				return;
 			var orderedDirectories = directories.Select(directory => new FileInfo(directory)).OrderBy(x => x.CreationTimeUtc);
-			var array = orderedDirectories.Select(x => Path.Combine(x.DirectoryName, x.Name)).ToArray();
+			var fullNames = orderedDirectories.Select(x => Path.Combine(x.DirectoryName, x.Name)).ToArray();
 			for (int i = 0; i < excess; i++)
 			{
-				Directory.Delete(array[i], true);
+				Directory.Delete(fullNames[i], true);
+			}
+		}
+
+		private void TryDeleteFile(string fileName)
+		{
+			try
+			{
+				_fileSystemWrapper.FileDelete(fileName);
+			}
+			catch (FileNotFoundException fex)
+			{
+				_logger.Warn("The file that we were trying to delete, was not found.\n Full file name: {0} \n Details: {1}", fileName, fex.Message);
+
+			}
+			catch (DirectoryNotFoundException dex)
+			{
+				_logger.Warn("The directory for the file we were trying to delete was not found. \n Full file name: {0} \n Details {1}", fileName, dex.StackTrace);
+
+			}
+			catch (Exception ex)
+			{
+				_logger.Warn("There was a problem deleting the file {0}. \n Details {1}", fileName, ex.StackTrace);
+			}
+			finally
+			{
+				_logger.Info("Deleted {0}", fileName);
 			}
 		}
 	}
