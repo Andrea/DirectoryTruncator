@@ -49,7 +49,10 @@ namespace DirectoryTrucator.Console
 			try
 			{
 				var directoryTrucator = new DirectoryTruncator.DirectoryTruncator(targetDirectory, new FileSystemWrapper());
-				directoryTrucator.TruncateByDirectory(count);
+				if(directory)
+					directoryTrucator.TruncateByDirectory(count);
+				else if(files)
+					directoryTrucator.TruncateByFileCount(count);
 			}
 			catch (Exception exception)
 			{
