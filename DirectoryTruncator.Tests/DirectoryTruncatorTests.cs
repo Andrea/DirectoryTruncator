@@ -83,11 +83,11 @@ namespace DirectoryTruncator.Tests
 		[Test]
 		public void Truncating_a_directory_has_no_effect_if_file_count_less_than_max_allowed()
 		{
-			const int MaxFiles = 3;
+			const int maxFiles = 3;
 			const int expected = 2;
 			CreateTestFiles(expected);
 
-			_directoryTruncator.TruncateByFileCount(MaxFiles);
+			_directoryTruncator.TruncateByFileCount(maxFiles);
 
 			var files = Directory.GetFiles(_testFolderPath);
 
@@ -116,6 +116,18 @@ namespace DirectoryTruncator.Tests
 		}
 
 		[Test]
+		public void When_subdirectories_within_subdirectories_Then_only_top_level_afects_count()
+		{
+			var numberOfDirectories = 3;
+			CreateTestDirectories(numberOfDirectories+1, true);
+
+			_directoryTruncator.TruncateByDirectory(numberOfDirectories);
+
+			Assert.AreEqual(numberOfDirectories, Directory.GetDirectories(_testFolderPath).Length);
+			
+		}
+
+		[Test]
 		public void When_error_on_delete_file_Then_does_not_throw()
 		{
 			var fileSystemWrapperMock = CreateAndSetFileSystemWrapperMock(3);
@@ -133,20 +145,6 @@ namespace DirectoryTruncator.Tests
 			fileSystemWrapperMock.Setup(x => x.FileDelete(It.IsAny<string>())).Throws(new DirectoryNotFoundException());
 
 			Assert.DoesNotThrow(() => directoryTruncator.TruncateByFileCount(1));
-		}
-
-		private Mock<IFileSystemWrapper> CreateAndSetFileSystemWrapperMock(int numberOfFiles)
-		{
-			CreateTestFiles(numberOfFiles);
-			var fileSystemWrapperMock = new Mock<IFileSystemWrapper>();
-			fileSystemWrapperMock.Setup(x => x.DirectoryExists(It.IsAny<string>())).Returns(true);
-			var strings = new List<string>();
-			for (int i = 1; i <= numberOfFiles; i++)
-			{
-				strings.Add(Path.Combine(_testFolderPath, "TestFile"+i+".txt"));
-			}
-			fileSystemWrapperMock.Setup(x => x.DirectoryGetFiles(It.IsAny<string>())).Returns(strings.ToArray);
-			return fileSystemWrapperMock;
 		}
 
 		[Test]
@@ -172,6 +170,20 @@ namespace DirectoryTruncator.Tests
 		}
 
 		#region Private
+
+		private Mock<IFileSystemWrapper> CreateAndSetFileSystemWrapperMock(int numberOfFiles)
+		{
+			CreateTestFiles(numberOfFiles);
+			var fileSystemWrapperMock = new Mock<IFileSystemWrapper>();
+			fileSystemWrapperMock.Setup(x => x.DirectoryExists(It.IsAny<string>())).Returns(true);
+			var strings = new List<string>();
+			for (int i = 1; i <= numberOfFiles; i++)
+			{
+				strings.Add(Path.Combine(_testFolderPath, "TestFile"+i+".txt"));
+			}
+			fileSystemWrapperMock.Setup(x => x.DirectoryGetFiles(It.IsAny<string>())).Returns(strings.ToArray);
+			return fileSystemWrapperMock;
+		}
 
 		private void AssertDirectoryContainsNumberOfFiles(int expexted)
 		{

@@ -1,5 +1,4 @@
 ﻿using System;
-//using System.IO;
 using System.IO;
 using System.Linq;
 using NLog;
@@ -64,6 +63,7 @@ namespace DirectoryTruncator
 			for (int i = 0; i < excess; i++)
 			{
 				Directory.Delete(fullNames[i], true);
+				_logger.Info("Deleted directory {0}", fullNames[i]);
 			}
 		}
 
